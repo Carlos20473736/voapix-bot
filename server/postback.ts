@@ -6,30 +6,28 @@
 import { POSTBACK_CONFIG, MonetagStatsResponse, CheckStatsResponse, CheckResetResponse } from "./postback.constants";
 
 /**
- * Gera um YMID único para o usuário
- * Formato: YMID_[timestamp]_[random]
+ * Gera um YMID numérico de 3 dígitos (100-999)
+ * Mesma lógica do script original
  */
 export function generateYmid(): string {
-  const timestamp = Date.now();
-  const random = Math.random().toString(36).substring(2, 8);
-  return `YMID_${timestamp}_${random}`;
+  const newId = (100 + Math.floor(Math.random() * 900)).toString();
+  return newId;
 }
 
 /**
  * Busca stats do YMID na API Monetag
- * @param ymid - ID único do usuário
+ * @param ymid - ID numérico de 3 dígitos
  * @returns Dados brutos da API Monetag
  */
 export async function fetchMonetagStats(ymid: string): Promise<MonetagStatsResponse> {
   try {
-    const url = `${POSTBACK_CONFIG.MONETAG_API}?ymid=${encodeURIComponent(ymid)}`;
+    const url = `${POSTBACK_CONFIG.MONETAG_API}${encodeURIComponent(ymid)}`;
     const response = await fetch(url, {
       method: "GET",
       headers: {
         "Accept": "application/json",
         "User-Agent": "VoaPix-Bot/1.0",
       },
-      timeout: 10000,
     });
 
     if (!response.ok) {
@@ -52,7 +50,7 @@ export async function fetchMonetagStats(ymid: string): Promise<MonetagStatsRespo
 
 /**
  * Verifica se o YMID atingiu os requisitos mínimos
- * @param ymid - ID único do usuário
+ * @param ymid - ID numérico de 3 dígitos
  * @returns Status da verificação
  */
 export async function checkStats(ymid: string): Promise<CheckStatsResponse> {
@@ -88,7 +86,7 @@ export async function checkStats(ymid: string): Promise<CheckStatsResponse> {
  * Isso acontece quando:
  * 1. API retorna erro (success: false)
  * 2. Stats caem abaixo do mínimo necessário
- * @param ymid - ID único do usuário
+ * @param ymid - ID numérico de 3 dígitos
  * @returns Informação sobre reset
  */
 export async function checkReset(ymid: string): Promise<CheckResetResponse> {
@@ -125,10 +123,10 @@ export async function checkReset(ymid: string): Promise<CheckResetResponse> {
 }
 
 /**
- * Valida se um YMID tem formato correto
+ * Valida se um YMID tem formato correto (3 dígitos numéricos, 100-999)
  * @param ymid - ID a validar
  * @returns true se válido
  */
 export function isValidYmid(ymid: string): boolean {
-  return /^YMID_\d+_[a-z0-9]{6}$/.test(ymid);
+  return /^\d{3}$/.test(ymid) && parseInt(ymid) >= 100 && parseInt(ymid) <= 999;
 }

@@ -5,10 +5,16 @@
 
 export const POSTBACK_CONFIG = {
   // API Monetag para verificação de stats
-  MONETAG_API: "https://api.monetag.com/v1/stats",
+  MONETAG_API: "https://monetag-postback-server-production.up.railway.app/api/stats/user/",
+
+  // API Monetag para envio de postback
+  MONETAG_POSTBACK_API: "https://monetag-postback-server-production.up.railway.app",
 
   // URL do Young Money (onde usuário completa tarefas)
-  YOUNG_MONEY_URL: "https://youngmoney.com.br/",
+  YOUNG_MONEY_URL: "https://youngmoney-bot-production-110d.up.railway.app/",
+
+  // Zone ID do Monetag
+  ZONE_ID: "10325249",
 
   // Requisitos mínimos para liberar o bot
   MIN_IMPRESSIONS: 20,
@@ -18,7 +24,7 @@ export const POSTBACK_CONFIG = {
   CHECK_INTERVAL: 5000,
 
   // Intervalo de verificação de reset (em ms)
-  BOT_CHECK_INTERVAL: 30000,
+  BOT_CHECK_INTERVAL: 10000,
 } as const;
 
 /**

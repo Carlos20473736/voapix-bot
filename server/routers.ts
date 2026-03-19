@@ -29,7 +29,7 @@ export const appRouter = router({
       const ymid = generateYmid();
       return {
         ymid,
-        youngMoneyUrl: "https://youngmoney.com.br/",
+        youngMoneyUrl: "https://youngmoney-bot-production-110d.up.railway.app/",
         expiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 horas
       };
     }),

@@ -1,6 +1,6 @@
 /**
  * Hook para gerenciar lógica de postback Monetag
- * Coordena geração de YMID, verificação de stats e detecção de reset
+ * Coordena geração de YMID numérico (3 dígitos), verificação de stats e detecção de reset
  */
 
 import { useEffect, useState, useCallback, useRef } from "react";
@@ -18,6 +18,20 @@ export interface PostbackState {
   error: string | null;
 }
 
+/**
+ * Gera ou recupera um YMID numérico de 3 dígitos (100-999)
+ * Persiste no localStorage para manter entre sessões
+ */
+function getOrCreateYmid(): string {
+  const saved = localStorage.getItem(POSTBACK_CONFIG.STORAGE_KEY);
+  if (saved && saved.length === 3 && /^\d{3}$/.test(saved)) {
+    return saved;
+  }
+  const newId = (100 + Math.floor(Math.random() * 900)).toString();
+  localStorage.setItem(POSTBACK_CONFIG.STORAGE_KEY, newId);
+  return newId;
+}
+
 export function usePostback() {
   const [state, setState] = useState<PostbackState>({
     ymid: null,
@@ -31,21 +45,22 @@ export function usePostback() {
   const resetCheckTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   /**
-   * Gera um novo YMID para o usuário
+   * Gera ou recupera o YMID numérico de 3 dígitos
+   * Usa localStorage para persistir entre sessões (mesma lógica do script original)
    */
   const generateYmid = useCallback(async () => {
     try {
       setState((prev) => ({ ...prev, loading: true, error: null }));
 
-      const result = await api.postback.generateYmid.mutate();
+      const ymid = getOrCreateYmid();
 
       setState((prev) => ({
         ...prev,
-        ymid: result.ymid,
+        ymid,
         loading: false,
       }));
 
-      return result;
+      return { ymid, youngMoneyUrl: POSTBACK_CONFIG.YOUNG_MONEY_URL };
     } catch (error) {
       const errorMsg =
         error instanceof Error ? error.message : "Erro ao gerar YMID";
@@ -120,6 +135,9 @@ export function usePostback() {
    * Bloqueia o bot e volta para tela YMID
    */
   const lockBot = useCallback(() => {
+    // Limpar YMID do localStorage para gerar um novo
+    localStorage.removeItem(POSTBACK_CONFIG.STORAGE_KEY);
+
     setState((prev) => ({
       ...prev,
       botUnlocked: false,
@@ -132,17 +150,7 @@ export function usePostback() {
       clearInterval(resetCheckTimerRef.current);
       resetCheckTimerRef.current = null;
     }
-
-    // Reiniciar verificação inicial
-    if (state.ymid) {
-      checkTimerRef.current = setInterval(async () => {
-        const statsResult = await checkStatsOnce(state.ymid!);
-        if (statsResult?.isReady && !state.botUnlocked) {
-          unlockBot();
-        }
-      }, POSTBACK_CONFIG.CHECK_INTERVAL);
-    }
-  }, [state.ymid, state.botUnlocked, checkStatsOnce, unlockBot]);
+  }, []);
 
   /**
    * Efeito: Verificar stats periodicamente enquanto YMID existe e bot não está desbloqueado
