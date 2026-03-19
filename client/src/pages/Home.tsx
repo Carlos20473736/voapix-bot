@@ -72,6 +72,7 @@ export default function Home() {
   const [maxPoints, setMaxPoints] = useState(50);
   const [showYmidDialog, setShowYmidDialog] = useState(true);
   const [botVerified, setBotVerified] = useState(false);
+  const [showYmidButton, setShowYmidButton] = useState(true);
 
   const {
     isRunning,
@@ -124,11 +125,15 @@ export default function Home() {
     <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Postback YMID Dialog */}
       <PostbackYmidDialog
-        isOpen={showYmidDialog && !botVerified}
-        onClose={() => setShowYmidDialog(false)}
+        isOpen={showYmidDialog}
+        onClose={() => {
+          setShowYmidDialog(false);
+          setShowYmidButton(false);
+        }}
         onBotUnlocked={() => {
           setBotVerified(true);
           setShowYmidDialog(false);
+          setShowYmidButton(false);
           toast.success("Bot verificado com sucesso!");
         }}
         onError={(error) => {
@@ -136,7 +141,7 @@ export default function Home() {
         }}
       />
       {/* Background */}
-      {showYmidDialog && !botVerified && (
+      {showYmidDialog && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" />
       )}
       <div
@@ -308,14 +313,29 @@ export default function Home() {
 
                   <Separator className="bg-border/30" />
 
+                  {/* YMID Dialog Button */}
+                  {showYmidButton && !botVerified && (
+                    <Button
+                      onClick={() => setShowYmidDialog(true)}
+                      size="lg"
+                      className="w-full font-heading font-bold text-base bg-indigo-500/90 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-500/20 transition-all duration-300"
+                    >
+                      <Zap className="w-5 h-5 mr-2" />
+                      Verificar YMID
+                    </Button>
+                  )}
+
                   {/* Start/Stop Button */}
                   <Button
                     onClick={handleToggleBot}
                     size="lg"
+                    disabled={!botVerified}
                     className={`w-full font-heading font-bold text-base transition-all duration-300 ${
                       isRunning
                         ? "bg-red-500/90 hover:bg-red-500 text-white shadow-lg shadow-red-500/20"
-                        : "bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/30"
+                        : botVerified
+                        ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/30"
+                        : "bg-gray-500/50 text-gray-400 cursor-not-allowed"
                     }`}
                   >
                     {isRunning ? (
