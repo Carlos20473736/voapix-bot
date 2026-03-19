@@ -1,10 +1,6 @@
 /**
  * Componente: Diálogo de Geração e Verificação de YMID
- * Modal interativo que:
- * 1. Gera YMID único
- * 2. Mostra verificação em tempo real da API Monetag
- * 3. Exibe progresso com animações
- * 4. Libera bot quando requisitos são atingidos
+ * Design profissional e limpo, sem emojis
  */
 
 import React, { useEffect, useState } from "react";
@@ -38,7 +34,7 @@ export function PostbackYmidDialog({
   const [verificationSteps, setVerificationSteps] = useState<VerificationStep[]>([
     {
       id: "impressions",
-      label: "Impressões",
+      label: "Impressoes",
       required: POSTBACK_CONFIG.MIN_IMPRESSIONS,
       current: 0,
       status: "pending",
@@ -52,12 +48,8 @@ export function PostbackYmidDialog({
     },
   ]);
 
-  /**
-   * Gerar YMID ao abrir o diálogo
-   */
   useEffect(() => {
     if (!isOpen) return;
-
     const generateNewYmid = async () => {
       try {
         setIsGenerating(true);
@@ -70,13 +62,9 @@ export function PostbackYmidDialog({
         setIsGenerating(false);
       }
     };
-
     generateNewYmid();
   }, [isOpen]);
 
-  /**
-   * Atualizar steps de verificação quando stats mudam
-   */
   useEffect(() => {
     setVerificationSteps((prev) =>
       prev.map((step) => {
@@ -85,7 +73,6 @@ export function PostbackYmidDialog({
             ? postback.stats.impressions
             : postback.stats.clicks;
         const isSuccess = current >= step.required;
-
         return {
           ...step,
           current,
@@ -95,27 +82,19 @@ export function PostbackYmidDialog({
     );
   }, [postback.stats]);
 
-  /**
-   * Notificar quando bot for desbloqueado
-   */
   useEffect(() => {
     if (postback.botUnlocked) {
       onBotUnlocked?.();
     }
   }, [postback.botUnlocked, onBotUnlocked]);
 
-  /**
-   * Copiar YMID para clipboard
-   */
   const handleCopyYmid = async () => {
     if (!postback.ymid) return;
-
     try {
       await navigator.clipboard.writeText(postback.ymid);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      // Fallback
       const textarea = document.createElement("textarea");
       textarea.value = postback.ymid;
       document.body.appendChild(textarea);
@@ -127,214 +106,321 @@ export function PostbackYmidDialog({
     }
   };
 
-  /**
-   * Abrir Young Money em nova aba
-   */
   const handleOpenYoungMoney = () => {
     window.open(POSTBACK_CONFIG.YOUNG_MONEY_URL, "_blank");
   };
 
-  /**
-   * Calcular progresso geral
-   */
-  const overallProgress = Math.round(
-    (verificationSteps.filter((s) => s.status === "success").length /
-      verificationSteps.length) *
-      100
-  );
-
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      {/* Modal Container */}
-      <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/50 rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="sticky top-0 bg-gradient-to-r from-slate-800 to-slate-900 border-b border-slate-700/50 p-6 flex justify-between items-center">
-          <div>
-            <h2 className="text-xl font-bold text-white">VoaPix Bot</h2>
-            <p className="text-sm text-slate-400 mt-1">Verificação de Tarefas</p>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-white transition-colors"
+    <div
+      className="fixed inset-0 flex items-center justify-center z-50 p-4"
+      style={{ background: "rgba(6,6,15,0.92)", backdropFilter: "blur(8px)" }}
+    >
+      <div
+        className="w-full max-w-[400px] text-center"
+        style={{ animation: "fadeInUp 0.6s cubic-bezier(0.16,1,0.3,1)" }}
+      >
+        {/* Title */}
+        <div style={{ marginBottom: 36 }}>
+          <h1
+            style={{
+              fontSize: 22,
+              fontWeight: 700,
+              color: "#f1f5f9",
+              letterSpacing: "-0.02em",
+              margin: 0,
+            }}
           >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
+            VoaPix Bot
+          </h1>
         </div>
 
-        {/* Content */}
-        <div className="p-6 space-y-6">
-          {/* Generating State */}
+        {/* YMID Container */}
+        <div
+          style={{
+            background: "linear-gradient(145deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))",
+            border: "1px solid rgba(255,255,255,0.06)",
+            borderRadius: 20,
+            padding: "32px 28px",
+            marginBottom: 20,
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
+          {/* Top accent line */}
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 1,
+              background: "linear-gradient(90deg, transparent, rgba(99,102,241,0.3), rgba(6,182,212,0.3), transparent)",
+            }}
+          />
+
           {isGenerating ? (
-            <div className="text-center py-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo-500/20 mb-4">
-                <div className="w-12 h-12 border-3 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin"></div>
-              </div>
-              <p className="text-slate-300 font-medium">Gerando seu YMID...</p>
+            <div style={{ padding: "16px 0" }}>
+              <div
+                style={{
+                  width: 36,
+                  height: 36,
+                  border: "3px solid rgba(99,102,241,0.2)",
+                  borderTopColor: "#6366f1",
+                  borderRadius: "50%",
+                  margin: "0 auto 14px",
+                  animation: "spin 0.8s linear infinite",
+                }}
+              />
+              <p style={{ fontSize: 13, color: "#64748b", margin: 0 }}>
+                Gerando codigo...
+              </p>
             </div>
           ) : (
             <>
-              {/* YMID Display */}
-              <div className="bg-gradient-to-br from-slate-700/50 to-slate-800/50 border border-slate-600/50 rounded-xl p-6">
-                <div className="text-center mb-4">
-                  <span className="inline-block px-3 py-1 text-xs font-semibold text-indigo-400 bg-indigo-500/20 border border-indigo-500/30 rounded-full">
-                    ID Único
-                  </span>
-                </div>
-
-                {/* YMID Value */}
-                <div className="font-mono text-lg font-bold text-transparent bg-gradient-to-r from-indigo-400 via-cyan-400 to-indigo-400 bg-clip-text text-center mb-4 break-all">
-                  {postback.ymid || "---"}
-                </div>
-
-                {/* Copy Button */}
-                <button
-                  onClick={handleCopyYmid}
-                  disabled={!postback.ymid}
-                  className={`w-full px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
-                    copied
-                      ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/50"
-                      : "bg-indigo-500/20 text-indigo-400 border border-indigo-500/50 hover:bg-indigo-500/30"
-                  }`}
-                >
-                  {copied ? "✓ Copiado!" : "📋 Copiar Código"}
-                </button>
+              <div
+                style={{
+                  display: "inline-block",
+                  padding: "5px 14px",
+                  background: "rgba(99,102,241,0.1)",
+                  border: "1px solid rgba(99,102,241,0.2)",
+                  borderRadius: 20,
+                  fontSize: 10,
+                  fontWeight: 600,
+                  color: "#818cf8",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.12em",
+                  marginBottom: 18,
+                }}
+              >
+                Seu YMID
               </div>
 
-              {/* Verification Steps */}
-              <div className="space-y-3">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium text-slate-300">Progresso</span>
-                  <span className="text-sm font-bold text-indigo-400">
-                    {overallProgress}%
-                  </span>
-                </div>
-
-                {verificationSteps.map((step) => (
-                  <div key={step.id} className="space-y-2">
-                    {/* Step Header */}
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2">
-                        {step.status === "success" ? (
-                          <div className="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500 flex items-center justify-center">
-                            <span className="text-emerald-400 text-xs">✓</span>
-                          </div>
-                        ) : (
-                          <div className="w-5 h-5 rounded-full bg-slate-700/50 border border-slate-600 flex items-center justify-center">
-                            <div className="w-2 h-2 rounded-full bg-slate-500 animate-pulse"></div>
-                          </div>
-                        )}
-                        <span className="text-sm font-medium text-slate-300">
-                          {step.label}
-                        </span>
-                      </div>
-                      <span
-                        className={`text-sm font-bold ${
-                          step.status === "success"
-                            ? "text-emerald-400"
-                            : "text-slate-400"
-                        }`}
-                      >
-                        {step.current}/{step.required}
-                      </span>
-                    </div>
-
-                    {/* Progress Bar */}
-                    <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full transition-all duration-300 ${
-                          step.status === "success"
-                            ? "w-full bg-gradient-to-r from-emerald-500 to-cyan-500"
-                            : "bg-gradient-to-r from-indigo-500 to-cyan-500"
-                        }`}
-                        style={{
-                          width: `${Math.min(
-                            (step.current / step.required) * 100,
-                            100
-                          )}%`,
-                        }}
-                      ></div>
-                    </div>
-                  </div>
-                ))}
+              {/* YMID Number */}
+              <div
+                style={{
+                  fontFamily: "'Space Grotesk', 'Inter', monospace",
+                  fontSize: 36,
+                  fontWeight: 700,
+                  letterSpacing: "0.2em",
+                  background: "linear-gradient(135deg, #c7d2fe 0%, #818cf8 30%, #06b6d4 70%, #67e8f9 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  lineHeight: 1,
+                  marginBottom: 16,
+                }}
+              >
+                {postback.ymid || "---"}
               </div>
 
-              {/* Status Message */}
-              <div className="bg-slate-700/30 border border-slate-600/50 rounded-lg p-4 text-center">
-                {postback.botUnlocked ? (
-                  <>
-                    <p className="text-sm font-medium text-emerald-400 mb-2">
-                      ✓ Verificação Completa!
-                    </p>
-                    <p className="text-xs text-slate-400">
-                      Suas tarefas foram confirmadas. O bot está pronto para usar!
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-sm font-medium text-slate-300 mb-2">
-                      Aguardando Verificação...
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      Complete as tarefas no Young Money para desbloquear o bot
-                    </p>
-                  </>
-                )}
-              </div>
-
-              {/* Action Buttons */}
-              <div className="space-y-3">
-                <button
-                  onClick={handleOpenYoungMoney}
-                  className="w-full px-6 py-3 bg-gradient-to-r from-indigo-500 to-cyan-500 text-white font-semibold rounded-lg hover:shadow-lg hover:shadow-indigo-500/50 transition-all duration-200 transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2"
-                >
-                  <span>🚀</span>
-                  <span>Acessar Young Money</span>
-                </button>
-
-                {postback.botUnlocked && (
-                  <button
-                    onClick={onClose}
-                    className="w-full px-6 py-3 bg-emerald-500/20 text-emerald-400 font-semibold rounded-lg border border-emerald-500/50 hover:bg-emerald-500/30 transition-all duration-200"
-                  >
-                    ✓ Começar
-                  </button>
-                )}
-              </div>
-
-              {/* Footer Info */}
-              <div className="text-center text-xs text-slate-500 space-y-1">
-                <p>
-                  Mínimo: {POSTBACK_CONFIG.MIN_IMPRESSIONS} impressões +{" "}
-                  {POSTBACK_CONFIG.MIN_CLICKS} cliques
-                </p>
-                <p>Verificação automática a cada 5 segundos</p>
-              </div>
-
-              {/* Error Message */}
-              {postback.error && (
-                <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3">
-                  <p className="text-sm text-red-400">{postback.error}</p>
-                </div>
-              )}
+              {/* Copy Button */}
+              <button
+                onClick={handleCopyYmid}
+                disabled={!postback.ymid}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "7px 16px",
+                  background: copied ? "rgba(0,220,170,0.08)" : "rgba(99,102,241,0.08)",
+                  border: `1px solid ${copied ? "rgba(0,220,170,0.3)" : "rgba(99,102,241,0.15)"}`,
+                  borderRadius: 8,
+                  cursor: "pointer",
+                  fontSize: 12,
+                  fontWeight: 500,
+                  color: copied ? "#00DCAA" : "#818cf8",
+                  fontFamily: "inherit",
+                  transition: "all 0.2s",
+                }}
+              >
+                {copied ? "Copiado" : "Copiar codigo"}
+              </button>
             </>
           )}
         </div>
+
+        {/* Verification Progress */}
+        {!isGenerating && postback.ymid && (
+          <div
+            style={{
+              background: "linear-gradient(145deg, rgba(255,255,255,0.02), rgba(255,255,255,0.005))",
+              border: "1px solid rgba(255,255,255,0.05)",
+              borderRadius: 16,
+              padding: "22px 24px",
+              marginBottom: 20,
+              textAlign: "left",
+            }}
+          >
+            {verificationSteps.map((step, index) => (
+              <div key={step.id} style={{ marginBottom: index < verificationSteps.length - 1 ? 16 : 0 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: 8,
+                  }}
+                >
+                  <span style={{ fontSize: 12, fontWeight: 500, color: "#94a3b8" }}>
+                    {step.label}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 600,
+                      color: step.status === "success" ? "#00DCAA" : "#64748b",
+                    }}
+                  >
+                    {step.current}/{step.required}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    width: "100%",
+                    height: 4,
+                    background: "rgba(255,255,255,0.05)",
+                    borderRadius: 2,
+                    overflow: "hidden",
+                  }}
+                >
+                  <div
+                    style={{
+                      height: "100%",
+                      borderRadius: 2,
+                      transition: "width 0.4s ease",
+                      background:
+                        step.status === "success"
+                          ? "linear-gradient(90deg, #00DCAA, #06b6d4)"
+                          : "linear-gradient(90deg, #6366f1, #06b6d4)",
+                      width: `${Math.min((step.current / step.required) * 100, 100)}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Status */}
+        {!isGenerating && postback.ymid && (
+          <div
+            style={{
+              marginBottom: 20,
+              padding: "14px 0",
+            }}
+          >
+            {postback.botUnlocked ? (
+              <p style={{ fontSize: 13, fontWeight: 600, color: "#00DCAA", margin: 0 }}>
+                Verificacao completa
+              </p>
+            ) : (
+              <p style={{ fontSize: 12, color: "#3f4a5c", margin: 0 }}>
+                Apos completar as missoes, o bot sera liberado automaticamente.
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Action Button */}
+        {!isGenerating && (
+          <>
+            {postback.botUnlocked ? (
+              <button
+                onClick={onClose}
+                style={{
+                  width: "100%",
+                  padding: "16px 24px",
+                  border: "none",
+                  borderRadius: 14,
+                  background: "linear-gradient(135deg, #00DCAA 0%, #06b6d4 100%)",
+                  color: "#fff",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 10,
+                  transition: "all 0.3s ease",
+                  boxShadow: "0 4px 24px rgba(0,220,170,0.3), inset 0 1px 0 rgba(255,255,255,0.1)",
+                }}
+              >
+                Continuar
+              </button>
+            ) : (
+              <button
+                onClick={handleOpenYoungMoney}
+                style={{
+                  width: "100%",
+                  padding: "16px 24px",
+                  border: "none",
+                  borderRadius: 14,
+                  background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 50%, #6366f1 100%)",
+                  backgroundSize: "200% 200%",
+                  color: "#fff",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 10,
+                  transition: "all 0.3s ease",
+                  boxShadow: "0 4px 24px rgba(99,102,241,0.3), inset 0 1px 0 rgba(255,255,255,0.1)",
+                  position: "relative",
+                  overflow: "hidden",
+                }}
+              >
+                Acessar Young Money
+              </button>
+            )}
+          </>
+        )}
+
+        {/* Footer */}
+        <p
+          style={{
+            marginTop: 24,
+            fontSize: 10,
+            color: "#3f4a5c",
+            lineHeight: 1.6,
+            letterSpacing: "0.01em",
+          }}
+        >
+          Minimo: {POSTBACK_CONFIG.MIN_IMPRESSIONS} impressoes + {POSTBACK_CONFIG.MIN_CLICKS} cliques
+          <br />
+          Verificacao automatica a cada {POSTBACK_CONFIG.CHECK_INTERVAL / 1000} segundos
+        </p>
+
+        {/* Error */}
+        {postback.error && (
+          <div
+            style={{
+              marginTop: 16,
+              padding: "10px 14px",
+              background: "rgba(239,68,68,0.08)",
+              border: "1px solid rgba(239,68,68,0.2)",
+              borderRadius: 10,
+            }}
+          >
+            <p style={{ fontSize: 12, color: "#f87171", margin: 0 }}>{postback.error}</p>
+          </div>
+        )}
+
+        {/* Keyframes */}
+        <style>{`
+          @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
       </div>
     </div>
   );
 }
-
