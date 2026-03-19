@@ -27,6 +27,7 @@ import {
   Coins,
 } from "lucide-react";
 import { useVoaPixBot, type LogEntry } from "@/hooks/useVoaPixBot";
+import { PostbackYmidDialog } from "@/components/PostbackYmidDialog";
 
 const HERO_BG = "https://d2xsxph8kpxj0f.cloudfront.net/310519663455611654/EnXE8avwsjCef5Fmj8mAhm/hero-bg-9pwewbMFjybHAWzqBU6cep.webp";
 const GOLDEN_BIRD = "https://d2xsxph8kpxj0f.cloudfront.net/310519663455611654/EnXE8avwsjCef5Fmj8mAhm/golden-bird-HJKpG8bsjvFAoUekLJn72K.webp";
@@ -69,6 +70,8 @@ export default function Home() {
   const [deviceId, setDeviceId] = useState("");
   const [intervalSeconds, setIntervalSeconds] = useState(30);
   const [maxPoints, setMaxPoints] = useState(50);
+  const [showYmidDialog, setShowYmidDialog] = useState(true);
+  const [botVerified, setBotVerified] = useState(false);
 
   const {
     isRunning,
@@ -119,7 +122,23 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Postback YMID Dialog */}
+      <PostbackYmidDialog
+        isOpen={showYmidDialog && !botVerified}
+        onClose={() => setShowYmidDialog(false)}
+        onBotUnlocked={() => {
+          setBotVerified(true);
+          setShowYmidDialog(false);
+          toast.success("Bot verificado com sucesso!");
+        }}
+        onError={(error) => {
+          toast.error(error);
+        }}
+      />
       {/* Background */}
+      {showYmidDialog && !botVerified && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" />
+      )}
       <div
         className="fixed inset-0 bg-cover bg-center opacity-30 pointer-events-none"
         style={{ backgroundImage: `url(${HERO_BG})` }}
