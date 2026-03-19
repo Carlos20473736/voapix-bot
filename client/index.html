@@ -19,7 +19,16 @@
     <script
       defer
       src="%VITE_ANALYTICS_ENDPOINT%/umami"
-      data-website-id="%VITE_ANALYTICS_WEBSITE_ID%"></script>
+      data-website-id="%VITE_ANALYTICS_WEBSITE_ID%"
+      async></script>
+    <script>
+      // Fallback para variáveis de ambiente não definidas
+      if (!window.location.hostname.includes('localhost')) {
+        if (!document.currentScript.src.includes('umami')) {
+          console.warn('Analytics não configurado');
+        }
+      }
+    </script>
   </body>
 
 </html>
