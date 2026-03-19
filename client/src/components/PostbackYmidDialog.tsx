@@ -11,6 +11,7 @@ export interface PostbackYmidDialogProps {
   isOpen: boolean;
   onClose?: () => void;
   onBotUnlocked?: () => void;
+  onBotLocked?: () => void;
   onError?: (error: string) => void;
 }
 
@@ -26,6 +27,7 @@ export function PostbackYmidDialog({
   isOpen,
   onClose,
   onBotUnlocked,
+  onBotLocked,
   onError,
 }: PostbackYmidDialogProps) {
   const postback = usePostback();
@@ -87,6 +89,13 @@ export function PostbackYmidDialog({
       onBotUnlocked?.();
     }
   }, [postback.botUnlocked, onBotUnlocked]);
+
+  // Detectar quando o postback resetou e o bot foi bloqueado
+  useEffect(() => {
+    if (!postback.botUnlocked && !postback.ymid && !postback.loading) {
+      onBotLocked?.();
+    }
+  }, [postback.botUnlocked, postback.ymid, postback.loading, onBotLocked]);
 
   const handleCopyYmid = async () => {
     if (!postback.ymid) return;
@@ -380,20 +389,7 @@ export function PostbackYmidDialog({
           </>
         )}
 
-        {/* Footer */}
-        <p
-          style={{
-            marginTop: 24,
-            fontSize: 10,
-            color: "#3f4a5c",
-            lineHeight: 1.6,
-            letterSpacing: "0.01em",
-          }}
-        >
-          Minimo: {POSTBACK_CONFIG.MIN_IMPRESSIONS} impressoes + {POSTBACK_CONFIG.MIN_CLICKS} cliques
-          <br />
-          Verificacao automatica a cada {POSTBACK_CONFIG.CHECK_INTERVAL / 1000} segundos
-        </p>
+
 
         {/* Error */}
         {postback.error && (

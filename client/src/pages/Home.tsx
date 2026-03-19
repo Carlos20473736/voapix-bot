@@ -72,7 +72,7 @@ export default function Home() {
   const [maxPoints, setMaxPoints] = useState(50);
   const [showYmidDialog, setShowYmidDialog] = useState(true);
   const [botVerified, setBotVerified] = useState(false);
-  const [showYmidButton, setShowYmidButton] = useState(true);
+
 
   const {
     isRunning,
@@ -127,14 +127,23 @@ export default function Home() {
       <PostbackYmidDialog
         isOpen={showYmidDialog}
         onClose={() => {
-          setShowYmidDialog(false);
-          setShowYmidButton(false);
+          if (botVerified) {
+            setShowYmidDialog(false);
+          }
         }}
         onBotUnlocked={() => {
           setBotVerified(true);
           setShowYmidDialog(false);
-          setShowYmidButton(false);
           toast.success("Bot verificado com sucesso!");
+        }}
+        onBotLocked={() => {
+          // Postback resetou - parar bot e forcar verificacao novamente
+          if (isRunning) {
+            stopBot();
+          }
+          setBotVerified(false);
+          setShowYmidDialog(true);
+          toast.error("Postback resetado. Complete as tarefas novamente.");
         }}
         onError={(error) => {
           toast.error(error);
@@ -313,17 +322,6 @@ export default function Home() {
 
                   <Separator className="bg-border/30" />
 
-                  {/* YMID Dialog Button */}
-                  {showYmidButton && !botVerified && (
-                    <Button
-                      onClick={() => setShowYmidDialog(true)}
-                      size="lg"
-                      className="w-full font-heading font-bold text-base bg-indigo-500/90 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-500/20 transition-all duration-300"
-                    >
-                      <Zap className="w-5 h-5 mr-2" />
-                      Verificar YMID
-                    </Button>
-                  )}
 
                   {/* Start/Stop Button */}
                   <Button
