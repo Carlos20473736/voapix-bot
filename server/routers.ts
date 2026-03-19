@@ -4,6 +4,8 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import axios from "axios";
+import { generateYmid, checkStats, checkReset, isValidYmid } from "./postback";
+import { CheckStatsResponse, CheckResetResponse, GenerateYmidResponse } from "./postback.constants";
 
 const VOAPIX_API_BASE = "https://voapix.thm.app.br/api";
 
@@ -16,6 +18,59 @@ export const appRouter = router({
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
     }),
+  }),
+
+  postback: router({
+    /**
+     * Gera um novo YMID para o usuário
+     * Este ID será usado para rastrear tarefas no Young Money
+     */
+    generateYmid: publicProcedure.mutation(async (): Promise<GenerateYmidResponse> => {
+      const ymid = generateYmid();
+      return {
+        ymid,
+        youngMoneyUrl: "https://youngmoney.com.br/",
+        expiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 horas
+      };
+    }),
+
+    /**
+     * Verifica o status das tarefas no Young Money
+     * Retorna impressões, cliques e se o bot está pronto para liberar
+     */
+    checkStats: publicProcedure
+      .input(z.object({ ymid: z.string().min(1) }))
+      .query(async ({ input }): Promise<CheckStatsResponse> => {
+        if (!isValidYmid(input.ymid)) {
+          return {
+            success: false,
+            impressions: 0,
+            clicks: 0,
+            isReady: false,
+            message: "YMID inválido",
+          };
+        }
+
+        return await checkStats(input.ymid);
+      }),
+
+    /**
+     * Verifica se o postback foi resetado
+     * Isso monitora se as tarefas foram limpas ou se o usuário perdeu acesso
+     */
+    checkReset: publicProcedure
+      .input(z.object({ ymid: z.string().min(1) }))
+      .query(async ({ input }): Promise<CheckResetResponse> => {
+        if (!isValidYmid(input.ymid)) {
+          return {
+            wasReset: true,
+            reason: "unknown",
+            message: "YMID inválido",
+          };
+        }
+
+        return await checkReset(input.ymid);
+      }),
   }),
 
   voapix: router({
