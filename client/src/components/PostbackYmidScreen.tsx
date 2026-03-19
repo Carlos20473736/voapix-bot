@@ -1,1 +1,208 @@
-/**\n * Componente: Tela de Verificação YMID\n * Mostra o ID único para o usuário e botão para acessar Young Money\n * Verifica automaticamente quando as tarefas são completas\n */\n\nimport React, { useEffect, useState } from \"react\";\nimport { usePostback } from \"@/hooks/usePostback\";\nimport { POSTBACK_CONFIG } from \"@/constants/postback\";\n\nexport interface PostbackYmidScreenProps {\n  onBotUnlocked?: () => void;\n  onError?: (error: string) => void;\n}\n\nexport function PostbackYmidScreen({\n  onBotUnlocked,\n  onError,\n}: PostbackYmidScreenProps) {\n  const postback = usePostback();\n  const [copied, setCopied] = useState(false);\n  const [isInitializing, setIsInitializing] = useState(true);\n\n  /**\n   * Gerar YMID ao montar o componente\n   */\n  useEffect(() => {\n    const init = async () => {\n      try {\n        await postback.generateYmid();\n        setIsInitializing(false);\n      } catch (error) {\n        const errorMsg =\n          error instanceof Error ? error.message : \"Erro ao gerar YMID\";\n        onError?.(errorMsg);\n        setIsInitializing(false);\n      }\n    };\n\n    init();\n  }, []);\n\n  /**\n   * Notificar quando bot for desbloqueado\n   */\n  useEffect(() => {\n    if (postback.botUnlocked) {\n      onBotUnlocked?.();\n    }\n  }, [postback.botUnlocked, onBotUnlocked]);\n\n  /**\n   * Copiar YMID para clipboard\n   */\n  const handleCopyYmid = async () => {\n    if (!postback.ymid) return;\n\n    try {\n      await navigator.clipboard.writeText(postback.ymid);\n      setCopied(true);\n      setTimeout(() => setCopied(false), 2000);\n    } catch (error) {\n      // Fallback para navegadores antigos\n      const textarea = document.createElement(\"textarea\");\n      textarea.value = postback.ymid;\n      document.body.appendChild(textarea);\n      textarea.select();\n      document.execCommand(\"copy\");\n      document.body.removeChild(textarea);\n      setCopied(true);\n      setTimeout(() => setCopied(false), 2000);\n    }\n  };\n\n  /**\n   * Abrir Young Money em nova aba\n   */\n  const handleOpenYoungMoney = () => {\n    window.open(POSTBACK_CONFIG.YOUNG_MONEY_URL, \"_blank\");\n  };\n\n  if (isInitializing) {\n    return (\n      <div className=\"fixed inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center z-50\">\n        <div className=\"text-center\">\n          <div className=\"inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo-500/20 mb-4\">\n            <div className=\"w-12 h-12 border-3 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin\"></div>\n          </div>\n          <p className=\"text-slate-300 font-medium\">Gerando seu YMID...</p>\n        </div>\n      </div>\n    );\n  }\n\n  return (\n    <div className=\"fixed inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center z-50 overflow-hidden\">\n      {/* Animated background */}\n      <div className=\"absolute inset-0 overflow-hidden\">\n        <div className=\"absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl animate-pulse\"></div>\n        <div className=\"absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse delay-1000\"></div>\n      </div>\n\n      {/* Content */}\n      <div className=\"relative w-full max-w-md px-4\">\n        <div className=\"bg-slate-800/40 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-8 shadow-2xl\">\n          {/* Header */}\n          <div className=\"text-center mb-8\">\n            <h1 className=\"text-2xl font-bold text-white mb-2\">VoaPix Bot</h1>\n            <p className=\"text-sm text-slate-400\">Verificação de Tarefas</p>\n          </div>\n\n          {/* YMID Container */}\n          <div className=\"bg-gradient-to-br from-slate-700/50 to-slate-800/50 border border-slate-600/50 rounded-xl p-6 mb-6\">\n            <div className=\"text-center mb-4\">\n              <span className=\"inline-block px-3 py-1 text-xs font-semibold text-indigo-400 bg-indigo-500/20 border border-indigo-500/30 rounded-full mb-4\">\n                Seu YMID\n              </span>\n            </div>\n\n            {/* YMID Value */}\n            <div className=\"font-mono text-2xl font-bold text-transparent bg-gradient-to-r from-indigo-400 via-cyan-400 to-indigo-400 bg-clip-text text-center mb-4 break-all\">\n              {postback.ymid || \"---\"}\n            </div>\n\n            {/* Copy Button */}\n            <button\n              onClick={handleCopyYmid}\n              disabled={!postback.ymid}\n              className={`w-full px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${\n                copied\n                  ? \"bg-emerald-500/20 text-emerald-400 border border-emerald-500/50\"\n                  : \"bg-indigo-500/20 text-indigo-400 border border-indigo-500/50 hover:bg-indigo-500/30\"\n              }`}\n            >\n              {copied ? \"✓ Copiado!\" : \"Copiar Código\"}\n            </button>\n          </div>\n\n          {/* Stats */}\n          <div className=\"grid grid-cols-2 gap-4 mb-6\">\n            <div className=\"bg-slate-700/30 rounded-lg p-3 text-center\">\n              <div className=\"text-lg font-bold text-cyan-400\">\n                {postback.stats.impressions}\n              </div>\n              <div className=\"text-xs text-slate-400 mt-1\">Impressões</div>\n              <div className=\"text-xs text-slate-500 mt-1\">\n                (mín: {POSTBACK_CONFIG.MIN_IMPRESSIONS})\n              </div>\n            </div>\n            <div className=\"bg-slate-700/30 rounded-lg p-3 text-center\">\n              <div className=\"text-lg font-bold text-purple-400\">\n                {postback.stats.clicks}\n              </div>\n              <div className=\"text-xs text-slate-400 mt-1\">Cliques</div>\n              <div className=\"text-xs text-slate-500 mt-1\">\n                (mín: {POSTBACK_CONFIG.MIN_CLICKS})\n              </div>\n            </div>\n          </div>\n\n          {/* Progress Indicator */}\n          <div className=\"mb-6\">\n            <div className=\"flex justify-between items-center mb-2\">\n              <span className=\"text-xs font-medium text-slate-400\">Progresso</span>\n              <span className=\"text-xs font-medium text-slate-400\">\n                {postback.botUnlocked ? \"✓ Completo\" : \"Aguardando...\"}\n              </span>\n            </div>\n            <div className=\"w-full h-2 bg-slate-700 rounded-full overflow-hidden\">\n              <div\n                className={`h-full transition-all duration-300 ${\n                  postback.botUnlocked\n                    ? \"w-full bg-gradient-to-r from-emerald-500 to-cyan-500\"\n                    : \"w-1/3 bg-gradient-to-r from-indigo-500 to-cyan-500\"\n                }`}\n              ></div>\n            </div>\n          </div>\n\n          {/* Main Button */}\n          <button\n            onClick={handleOpenYoungMoney}\n            className=\"w-full px-6 py-3 bg-gradient-to-r from-indigo-500 to-cyan-500 text-white font-semibold rounded-lg hover:shadow-lg hover:shadow-indigo-500/50 transition-all duration-200 transform hover:-translate-y-0.5 active:translate-y-0\"\n          >\n            Acessar Young Money\n          </button>\n\n          {/* Footer */}\n          <div className=\"mt-6 text-center\">\n            <p className=\"text-xs text-slate-500 leading-relaxed\">\n              Complete as tarefas no Young Money. O bot será liberado automaticamente\n              quando você atingir {POSTBACK_CONFIG.MIN_IMPRESSIONS} impressões e{\" \"}\n              {POSTBACK_CONFIG.MIN_CLICKS} cliques.\n            </p>\n          </div>\n\n          {/* Error Message */}\n          {postback.error && (\n            <div className=\"mt-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg\">\n              <p className=\"text-sm text-red-400\">{postback.error}</p>\n            </div>\n          )}\n        </div>\n      </div>\n    </div>\n  );\n}\n
+/**
+ * Componente: Tela de Verificação YMID
+ * Mostra o ID único para o usuário e botão para acessar Young Money
+ * Verifica automaticamente quando as tarefas são completas
+ */
+
+import React, { useEffect, useState } from "react";
+import { usePostback } from "@/hooks/usePostback";
+import { POSTBACK_CONFIG } from "@/constants/postback";
+
+export interface PostbackYmidScreenProps {
+  onBotUnlocked?: () => void;
+  onError?: (error: string) => void;
+}
+
+export function PostbackYmidScreen({
+  onBotUnlocked,
+  onError,
+}: PostbackYmidScreenProps) {
+  const postback = usePostback();
+  const [copied, setCopied] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
+
+  /**
+   * Gerar YMID ao montar o componente
+   */
+  useEffect(() => {
+    const init = async () => {
+      try {
+        await postback.generateYmid();
+        setIsInitializing(false);
+      } catch (error) {
+        const errorMsg =
+          error instanceof Error ? error.message : "Erro ao gerar YMID";
+        onError?.(errorMsg);
+        setIsInitializing(false);
+      }
+    };
+
+    init();
+  }, []);
+
+  /**
+   * Notificar quando bot for desbloqueado
+   */
+  useEffect(() => {
+    if (postback.botUnlocked) {
+      onBotUnlocked?.();
+    }
+  }, [postback.botUnlocked, onBotUnlocked]);
+
+  /**
+   * Copiar YMID para clipboard
+   */
+  const handleCopyYmid = async () => {
+    if (!postback.ymid) return;
+
+    try {
+      await navigator.clipboard.writeText(postback.ymid);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      // Fallback para navegadores antigos
+      const textarea = document.createElement("textarea");
+      textarea.value = postback.ymid;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  /**
+   * Abrir Young Money em nova aba
+   */
+  const handleOpenYoungMoney = () => {
+    window.open(POSTBACK_CONFIG.YOUNG_MONEY_URL, "_blank");
+  };
+
+  if (isInitializing) {
+    return (
+      <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center z-50">
+        <div className="text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo-500/20 mb-4">
+            <div className="w-12 h-12 border-3 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin"></div>
+          </div>
+          <p className="text-slate-300 font-medium">Gerando seu YMID...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center z-50 overflow-hidden">
+      {/* Animated background */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      </div>
+
+      {/* Content */}
+      <div className="relative w-full max-w-md px-4">
+        <div className="bg-slate-800/40 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-8 shadow-2xl">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-2xl font-bold text-white mb-2">VoaPix Bot</h1>
+            <p className="text-sm text-slate-400">Verificação de Tarefas</p>
+          </div>
+
+          {/* YMID Container */}
+          <div className="bg-gradient-to-br from-slate-700/50 to-slate-800/50 border border-slate-600/50 rounded-xl p-6 mb-6">
+            <div className="text-center mb-4">
+              <span className="inline-block px-3 py-1 text-xs font-semibold text-indigo-400 bg-indigo-500/20 border border-indigo-500/30 rounded-full mb-4">
+                Seu YMID
+              </span>
+            </div>
+
+            {/* YMID Value */}
+            <div className="font-mono text-2xl font-bold text-transparent bg-gradient-to-r from-indigo-400 via-cyan-400 to-indigo-400 bg-clip-text text-center mb-4 break-all">
+              {postback.ymid || "---"}
+            </div>
+
+            {/* Copy Button */}
+            <button
+              onClick={handleCopyYmid}
+              disabled={!postback.ymid}
+              className={`w-full px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                copied
+                  ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/50"
+                  : "bg-indigo-500/20 text-indigo-400 border border-indigo-500/50 hover:bg-indigo-500/30"
+              }`}
+            >
+              {copied ? "✓ Copiado!" : "Copiar Código"}
+            </button>
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="bg-slate-700/30 rounded-lg p-3 text-center">
+              <div className="text-lg font-bold text-cyan-400">
+                {postback.stats.impressions}
+              </div>
+              <div className="text-xs text-slate-400 mt-1">Impressões</div>
+              <div className="text-xs text-slate-500 mt-1">
+                (mín: {POSTBACK_CONFIG.MIN_IMPRESSIONS})
+              </div>
+            </div>
+            <div className="bg-slate-700/30 rounded-lg p-3 text-center">
+              <div className="text-lg font-bold text-purple-400">
+                {postback.stats.clicks}
+              </div>
+              <div className="text-xs text-slate-400 mt-1">Cliques</div>
+              <div className="text-xs text-slate-500 mt-1">
+                (mín: {POSTBACK_CONFIG.MIN_CLICKS})
+              </div>
+            </div>
+          </div>
+
+          {/* Progress Indicator */}
+          <div className="mb-6">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-xs font-medium text-slate-400">Progresso</span>
+              <span className="text-xs font-medium text-slate-400">
+                {postback.botUnlocked ? "✓ Completo" : "Aguardando..."}
+              </span>
+            </div>
+            <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
+              <div
+                className={`h-full transition-all duration-300 ${
+                  postback.botUnlocked
+                    ? "w-full bg-gradient-to-r from-emerald-500 to-cyan-500"
+                    : "w-1/3 bg-gradient-to-r from-indigo-500 to-cyan-500"
+                }`}
+              ></div>
+            </div>
+          </div>
+
+          {/* Main Button */}
+          <button
+            onClick={handleOpenYoungMoney}
+            className="w-full px-6 py-3 bg-gradient-to-r from-indigo-500 to-cyan-500 text-white font-semibold rounded-lg hover:shadow-lg hover:shadow-indigo-500/50 transition-all duration-200 transform hover:-translate-y-0.5 active:translate-y-0"
+          >
+            Acessar Young Money
+          </button>
+
+          {/* Footer */}
+          <div className="mt-6 text-center">
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Complete as tarefas no Young Money. O bot será liberado automaticamente
+              quando você atingir {POSTBACK_CONFIG.MIN_IMPRESSIONS} impressões e{" "}
+              {POSTBACK_CONFIG.MIN_CLICKS} cliques.
+            </p>
+          </div>
+
+          {/* Error Message */}
+          {postback.error && (
+            <div className="mt-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg">
+              <p className="text-sm text-red-400">{postback.error}</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
